@@ -6,100 +6,208 @@
 <title>LocalWab Admin - Painel</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body { margin:0; font-family:Arial; background:#0f172a; color:white;}
-header { background:#020617; padding:15px; text-align:center;}
+header { background:#020617; padding:15px; display:flex; justify-content:space-between; align-items:center;}
+header h1 { margin:0;}
+button.logout { padding:5px 10px; background:#ef4444; color:white; border:none; border-radius:5px; cursor:pointer;}
 .container { padding:15px;}
 .card { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px;}
 #map { height:300px; width:100%; border-radius:10px;}
+input.addField { padding:5px; margin-right:5px; width:150px;}
+button.addButton, button.removeButton { padding:5px 10px; color:white; border:none; border-radius:5px; cursor:pointer;}
+button.addButton { background:#22c55e; }
+button.removeButton { background:#ef4444; }
+canvas { background:#1e293b; margin-top:10px; border-radius:10px; padding:10px;}
 </style>
-
 </head>
 <body>
 
 <header>
-🚀 LocalWab Admin
+<h1>🚀 LocalWab Admin</h1>
+<button class="logout" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
+<!-- USUÁRIOS -->
 <div class="card">
 <h3>👤 Usuários</h3>
 <ul id="users"></ul>
+<input type="text" id="newUser" class="addField" placeholder="Número do usuário">
+<button class="addButton" onclick="addUser()">Adicionar Usuário</button>
 </div>
 
+<!-- PAGAMENTOS -->
 <div class="card">
 <h3>💰 Pagamentos</h3>
 <ul id="payments"></ul>
+<input type="text" id="paymentNumber" class="addField" placeholder="Número do usuário">
+<input type="number" id="paymentValue" class="addField" placeholder="Valor KZ">
+<button class="addButton" onclick="addPayment()">Adicionar Pagamento</button>
 </div>
 
+<!-- VEÍCULOS -->
 <div class="card">
 <h3>🚌 Mapa dos Transportes</h3>
 <div id="map"></div>
+<input type="text" id="vehicleName" class="addField" placeholder="Nome do veículo">
+<input type="number" id="vehicleLat" class="addField" placeholder="Latitude">
+<input type="number" id="vehicleLng" class="addField" placeholder="Longitude">
+<button class="addButton" onclick="addVehicle()">Adicionar Veículo</button>
+</div>
+
+<!-- ESTATÍSTICAS -->
+<div class="card">
+<h3>📊 Estatísticas</h3>
+<ul id="stats"></ul>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="card">
+<h3>📈 Gráficos do Projeto</h3>
+<canvas id="usersChart" width="400" height="200"></canvas>
+<canvas id="paymentsChart" width="400" height="200"></canvas>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// Dados simulados
+// Proteção: só acessar se logado
+if(sessionStorage.getItem("loggedIn") !== "true"){
+    alert("Acesso negado! Faça login primeiro.");
+    window.location.href = "index.html";
+}
+
+// DADOS SIMULADOS
 let users = [
-    {numero:"940045782", expira: Date.now()+600000},
-    {numero:"923000111", expira: Date.now()-1000}
+  {numero:"940045782", expira: Date.now()+360000, pago:true, bloqueado:false},
+  {numero:"923000111", expira: Date.now()-60000, pago:false, bloqueado:false}
 ];
 
 let payments = [
-    {numero:"940045782", valor:10},
-    {numero:"923000111", valor:10}
+  {numero:"940045782", valor:10, hora:"14:20", metodo:"USSD"},
+  {numero:"923000111", valor:15, hora:"15:00", metodo:"USSD"}
 ];
 
 let vehicles = [
-    {nome:"Cidrália", lat:-8.8383, lng:13.2344},
-    {nome:"Rosalina", lat:-8.85, lng:13.22},
-    {nome:"Tecul", lat:-8.82, lng:13.20}
+  {nome:"Cidrália", lat:-8.8383, lng:13.2344, estado:"em movimento", velocidade:30},
+  {nome:"Rosalina", lat:-8.85, lng:13.22, estado:"próximo do usuário", velocidade:10},
+  {nome:"Tecul", lat:-8.82, lng:13.20, estado:"parado", velocidade:0}
 ];
 
-// Render
+// Funções usuários
 function renderUsers(){
-    let html="";
-    users.forEach(u=>{
-        let ativo = (u.expira > Date.now()) ? "🟢 Ativo" : "🔴 Expirado";
-        html += `<li>${u.numero} - ${ativo}</li>`;
-    });
-    document.getElementById("users").innerHTML = html;
+  let html="";
+  users.forEach((u,index)=>{
+    let ativo = u.bloqueado ? "⛔ Bloqueado" : (u.expira > Date.now() ? "🟢 Ativo" : "🔴 Expirado");
+    let tempo = Math.max(0, Math.floor((u.expira - Date.now())/60000));
+    let pagamento = u.pago ? "✔️ Pago" : "❌ Não Pago";
+    html += `<li>${u.numero} - ${ativo} - Tempo: ${tempo} min - ${pagamento} 
+      <button class="removeButton" onclick="toggleBloqueio(${index})">Bloquear/Desbloquear</button></li>`;
+  });
+  document.getElementById("users").innerHTML = html;
 }
 
-function renderPayments(){
-    let html="";
-    payments.forEach(p=>{
-        html += `<li>${p.numero} - ${p.valor} KZ</li>`;
-    });
-    document.getElementById("payments").innerHTML = html;
+function addUser(){
+  let num = document.getElementById("newUser").value.trim();
+  if(num){ users.push({numero:num, expira: Date.now()+360000, pago:false, bloqueado:false}); document.getElementById("newUser").value=""; renderUsers(); renderStats(); updateCharts(); }
 }
+
+function toggleBloqueio(index){ users[index].bloqueado = !users[index].bloqueado; renderUsers(); }
+
+// Funções pagamentos
+function renderPayments(){
+  let html="";
+  payments.forEach((p,index)=>{
+    html += `<li>${p.numero} - ${p.valor} KZ - ${p.metodo} - Hora: ${p.hora} 
+      <button class="removeButton" onclick="removePayment(${index})">❌</button></li>`;
+  });
+  document.getElementById("payments").innerHTML = html;
+}
+
+function addPayment(){
+  let num = document.getElementById("paymentNumber").value.trim();
+  let val = Number(document.getElementById("paymentValue").value);
+  if(num && val){ payments.push({numero:num, valor:val, hora:new Date().toLocaleTimeString(), metodo:"USSD"}); document.getElementById("paymentNumber").value=""; document.getElementById("paymentValue").value=""; renderPayments(); renderStats(); updateCharts();}
+}
+
+function removePayment(index){ payments.splice(index,1); renderPayments(); renderStats(); updateCharts(); }
 
 // Mapa
 let map;
 function initMap(){
-    map = L.map('map').setView([-8.8383, 13.2344], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  map = L.map('map').setView([-8.8383, 13.2344], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  vehicles.forEach(v=>{
+    L.marker([v.lat,v.lng]).addTo(map).bindPopup(`${v.nome} - ${v.estado} - ${v.velocidade} km/h`);
+  });
+}
 
-    vehicles.forEach(v=>{
-        L.marker([v.lat, v.lng])
-        .addTo(map)
-        .bindPopup(v.nome);
+function addVehicle(){
+  let nome=document.getElementById("vehicleName").value.trim();
+  let lat=parseFloat(document.getElementById("vehicleLat").value);
+  let lng=parseFloat(document.getElementById("vehicleLng").value);
+  if(nome && !isNaN(lat) && !isNaN(lng)){ vehicles.push({nome:nome, lat:lat, lng:lng, estado:"parado", velocidade:0}); document.getElementById("vehicleName").value=""; document.getElementById("vehicleLat").value=""; document.getElementById("vehicleLng").value=""; initMap(); }
+}
+
+// Estatísticas
+function renderStats(){
+  let numUsuarios=users.length;
+  let totalGanhos=payments.reduce((sum,p)=>sum+p.valor,0);
+  document.getElementById("stats").innerHTML=`<li>Usuários: ${numUsuarios}</li><li>Ganhos: ${totalGanhos} KZ</li>`;
+}
+
+// Logout
+function logout(){ sessionStorage.removeItem("loggedIn"); window.location.href="index.html"; }
+
+// Gráficos Chart.js
+let usersChart, paymentsChart;
+function renderCharts(){
+    const ctxUsers = document.getElementById('usersChart').getContext('2d');
+    usersChart = new Chart(ctxUsers, {
+        type: 'line',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Usuários por dia',
+                data: [2,5,3,4,6,5,7],
+                borderColor: 'rgba(34, 197, 94,1)',
+                backgroundColor: 'rgba(34, 197, 94,0.2)',
+                fill:true,
+                tension:0.3
+            }]
+        },
+        options: { responsive:true, plugins:{legend:{display:true}} }
+    });
+
+    const ctxPayments = document.getElementById('paymentsChart').getContext('2d');
+    paymentsChart = new Chart(ctxPayments, {
+        type: 'bar',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Ganhos KZ por dia',
+                data: [20,50,30,40,60,50,70],
+                backgroundColor: 'rgba(34, 197, 94,0.7)'
+            }]
+        },
+        options: { responsive:true, plugins:{legend:{display:true}} }
     });
 }
 
-// Iniciar sistema
-function iniciarSistema(){
-    renderUsers();
-    renderPayments();
-    initMap();
+function updateCharts(){ 
+  usersChart.data.datasets[0].data = [users.length,5,3,4,6,5,7]; 
+  usersChart.update();
+  let total = payments.reduce((sum,p)=>sum+p.valor,0);
+  paymentsChart.data.datasets[0].data = [total,50,30,40,60,50,70]; 
+  paymentsChart.update();
 }
 
-window.onload = iniciarSistema;
-setInterval(renderUsers, 1000);
+// Inicialização
+window.onload=function(){ renderUsers(); renderPayments(); renderStats(); initMap(); renderCharts();}
+setInterval(renderUsers,1000);
 </script>
 
 </body>
