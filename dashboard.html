@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalWab Admin - Painel</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body { margin:0; font-family:Arial; background:#0f172a; color:white;}
+header { background:#020617; padding:15px; text-align:center;}
+.container { padding:15px;}
+.card { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px;}
+#map { height:300px; width:100%; border-radius:10px;}
+</style>
+
+</head>
+<body>
+
+<header>
+🚀 LocalWab Admin
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>👤 Usuários</h3>
+<ul id="users"></ul>
+</div>
+
+<div class="card">
+<h3>💰 Pagamentos</h3>
+<ul id="payments"></ul>
+</div>
+
+<div class="card">
+<h3>🚌 Mapa dos Transportes</h3>
+<div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// Dados simulados
+let users = [
+    {numero:"940045782", expira: Date.now()+600000},
+    {numero:"923000111", expira: Date.now()-1000}
+];
+
+let payments = [
+    {numero:"940045782", valor:10},
+    {numero:"923000111", valor:10}
+];
+
+let vehicles = [
+    {nome:"Cidrália", lat:-8.8383, lng:13.2344},
+    {nome:"Rosalina", lat:-8.85, lng:13.22},
+    {nome:"Tecul", lat:-8.82, lng:13.20}
+];
+
+// Render
+function renderUsers(){
+    let html="";
+    users.forEach(u=>{
+        let ativo = (u.expira > Date.now()) ? "🟢 Ativo" : "🔴 Expirado";
+        html += `<li>${u.numero} - ${ativo}</li>`;
+    });
+    document.getElementById("users").innerHTML = html;
+}
+
+function renderPayments(){
+    let html="";
+    payments.forEach(p=>{
+        html += `<li>${p.numero} - ${p.valor} KZ</li>`;
+    });
+    document.getElementById("payments").innerHTML = html;
+}
+
+// Mapa
+let map;
+function initMap(){
+    map = L.map('map').setView([-8.8383, 13.2344], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    vehicles.forEach(v=>{
+        L.marker([v.lat, v.lng])
+        .addTo(map)
+        .bindPopup(v.nome);
+    });
+}
+
+// Iniciar sistema
+function iniciarSistema(){
+    renderUsers();
+    renderPayments();
+    initMap();
+}
+
+window.onload = iniciarSistema;
+setInterval(renderUsers, 1000);
+</script>
+
+</body>
+</html>
