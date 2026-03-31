@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalWab Admin - Login</title>
+
+<style>
+body { margin:0; font-family:Arial; background:#0f172a; color:white;}
+.login { display:flex; justify-content:center; align-items:center; height:100vh;}
+.box { background:#1e293b; padding:30px; border-radius:10px; text-align:center;}
+input { display:block; margin:10px auto; padding:10px; width:200px;}
+button { padding:10px; background:#22c55e; border:none; color:white; cursor:pointer;}
+</style>
+
+</head>
+<body>
+
+<div class="login">
+    <div class="box">
+        <h2>🔐 LocalWab Admin</h2>
+        <input type="text" id="user" placeholder="Usuário">
+        <input type="password" id="pass" placeholder="Senha">
+        <button type="button" onclick="login()">Entrar</button>
+    </div>
+</div>
+
+<script>
+function login() {
+    let u = document.getElementById("user").value.trim();
+    let p = document.getElementById("pass").value.trim();
+
+    if(u === "admin" && p === "1234"){
+        // Redireciona para o dashboard
+        window.location.href = "dashboard.html";
+    } else {
+        alert("Login inválido");
+    }
+}
+</script>
+
+</body>
+</html>
