@@ -3,39 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LocalWab Admin - Login</title>
+<title>LocalWab Login</title>
 <style>
-body { margin:0; font-family:Arial; background:#0f172a; color:white;}
-.login { display:flex; justify-content:center; align-items:center; height:100vh;}
+body { margin:0; font-family:Arial; background:#0f172a; color:white; display:flex; justify-content:center; align-items:center; height:100vh;}
 .box { background:#1e293b; padding:30px; border-radius:10px; text-align:center;}
 input { display:block; margin:10px auto; padding:10px; width:200px;}
-button { padding:10px; background:#22c55e; border:none; color:white; cursor:pointer;}
+button { padding:10px; background:#22c55e; border:none; color:white; cursor:pointer; width:220px; border-radius:5px;}
 </style>
 </head>
 <body>
-<div class="login">
-    <div class="box">
-        <h2>🔐 LocalWab Admin</h2>
-        <input type="text" id="user" placeholder="Usuário">
-        <input type="password" id="pass" placeholder="Senha">
-        <button type="button" onclick="login()">Entrar</button>
-    </div>
-</div>
-<script>
-// Usuário e senha
-const USER = "valentim24";
-const PASS = "Valentim24@";
 
-function login() {
-    let u = document.getElementById("user").value.trim();
-    let p = document.getElementById("pass").value.trim();
-    if(u === USER && p === PASS){
-        sessionStorage.setItem("loggedIn", "true");
+<div class="box">
+    <h2>🔐 LocalWab Login</h2>
+    <input type="text" id="user" placeholder="Usuário">
+    <input type="password" id="pass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+</div>
+
+<script>
+function login(){
+    let u = document.getElementById("user").value;
+    let p = document.getElementById("pass").value;
+    if(u === "valentim24" && p === "Valentim24@"){
+        // Abrir dashboard.html em nova janela
         window.location.href = "dashboard.html";
-    } else {
+    }else{
         alert("Login inválido");
     }
 }
 </script>
+
 </body>
 </html>
