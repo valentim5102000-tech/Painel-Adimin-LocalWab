@@ -14,11 +14,11 @@ button.logout { padding:5px 10px; background:#ef4444; color:white; border:none; 
 .container { padding:15px;}
 .card { background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px;}
 #map { height:300px; width:100%; border-radius:10px;}
-input.addField { padding:5px; margin-right:5px; width:150px;}
-button.addButton, button.removeButton, button.filterButton { padding:5px 10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-top:5px;}
-button.addButton { background:#22c55e; }
-button.removeButton { background:#ef4444; }
-button.filterButton { background:#3b82f6; }
+input, select { display:block; margin:5px 0; padding:5px; width:100%; max-width:300px; }
+button { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin-top:5px; }
+button.addButton { background:#22c55e; color:white; }
+button.removeButton { background:#ef4444; color:white; }
+button.filterButton { background:#3b82f6; color:white; }
 canvas { background:#1e293b; margin-top:10px; border-radius:10px; padding:10px;}
 </style>
 </head>
@@ -31,47 +31,61 @@ canvas { background:#1e293b; margin-top:10px; border-radius:10px; padding:10px;}
 
 <div class="container">
 
+<!-- Usuários -->
 <div class="card">
 <h3>👤 Usuários</h3>
+<input type="text" id="searchUser" placeholder="Buscar usuário" oninput="filterUsers()">
 <ul id="users"></ul>
-<input type="text" id="newUser" class="addField" placeholder="Número do usuário">
+<input type="text" id="newUser" placeholder="Número do usuário">
 <button class="addButton" onclick="addUser()">Adicionar Usuário</button>
 </div>
 
+<!-- Pagamentos -->
 <div class="card">
 <h3>💰 Pagamentos</h3>
 <button class="filterButton" onclick="filterPayments('Todos')">Todos</button>
 <button class="filterButton" onclick="filterPayments('USSD')">USSD</button>
 <button class="filterButton" onclick="filterPayments('Multicaixa Express')">Multicaixa Express</button>
 <ul id="payments"></ul>
-<input type="text" id="paymentNumber" class="addField" placeholder="Número do usuário">
-<input type="number" id="paymentValue" class="addField" placeholder="Valor KZ">
-<select id="paymentMethod" class="addField">
-    <option value="USSD">USSD</option>
-    <option value="Multicaixa Express">Multicaixa Express</option>
+<input type="text" id="paymentNumber" placeholder="Número do usuário">
+<input type="number" id="paymentValue" placeholder="Valor KZ">
+<select id="paymentMethod">
+<option value="USSD">USSD</option>
+<option value="Multicaixa Express">Multicaixa Express</option>
 </select>
 <button class="addButton" onclick="addPayment()">Adicionar Pagamento</button>
 </div>
 
+<!-- Veículos -->
 <div class="card">
 <h3>🚌 Mapa dos Transportes</h3>
 <div id="map"></div>
-<input type="text" id="vehicleName" class="addField" placeholder="Nome do veículo">
-<input type="number" id="vehicleLat" class="addField" placeholder="Latitude">
-<input type="number" id="vehicleLng" class="addField" placeholder="Longitude">
+<input type="text" id="vehicleName" placeholder="Nome do veículo">
+<input type="number" id="vehicleLat" placeholder="Latitude">
+<input type="number" id="vehicleLng" placeholder="Longitude">
 <button class="addButton" onclick="addVehicle()">Adicionar Veículo</button>
 </div>
 
+<!-- Estatísticas -->
 <div class="card">
 <h3>📊 Estatísticas</h3>
 <ul id="stats"></ul>
 </div>
 
+<!-- Gráficos -->
 <div class="card">
-<h3>📈 Gráficos do Projeto</h3>
+<h3>📈 Gráficos</h3>
 <canvas id="usersChart" width="400" height="200"></canvas>
 <canvas id="paymentsUSSDChart" width="400" height="200"></canvas>
-<canvas id="paymentsMultiChart" width="400" height="200"></canvas>
+<canvas id="paymentsMulticaixaChart" width="400" height="200"></canvas>
+</div>
+
+<!-- Alteração de senha admin -->
+<div class="card">
+<h3>🔑 Alterar Senha Admin</h3>
+<input type="text" id="newAdminUser" placeholder="Novo usuário">
+<input type="password" id="newAdminPass" placeholder="Nova senha">
+<button class="addButton" onclick="changeAdmin()">Salvar</button>
 </div>
 
 </div>
@@ -81,137 +95,68 @@ canvas { background:#1e293b; margin-top:10px; border-radius:10px; padding:10px;}
 // Logout
 function logout(){ window.location.href="index.html"; }
 
+// Admin
+let adminUser="valentim24";
+let adminPass="Valentim24@";
+function changeAdmin(){
+  let u=document.getElementById("newAdminUser").value.trim();
+  let p=document.getElementById("newAdminPass").value.trim();
+  if(u && p){ adminUser=u; adminPass=p; alert("Usuário e senha atualizados!"); document.getElementById("newAdminUser").value=""; document.getElementById("newAdminPass").value=""; }
+}
+
 // Dados simulados
-let users = [
-  {numero:"940045782", expira:Date.now()+360000, pago:true, bloqueado:false},
-  {numero:"923000111", expira:Date.now()-60000, pago:false, bloqueado:false}
-];
-
-let payments = [
-  {numero:"940045782", valor:10, hora:"14:20", metodo:"USSD"},
-  {numero:"923000111", valor:15, hora:"15:00", metodo:"USSD"},
-  {numero:"940012345", valor:20, hora:"16:10", metodo:"Multicaixa Express"},
-  {numero:"923098765", valor:30, hora:"17:25", metodo:"Multicaixa Express"}
-];
-
-let vehicles = [
-  {nome:"Cidrália", lat:-8.8383, lng:13.2344, estado:"em movimento", velocidade:30},
-  {nome:"Rosalina", lat:-8.85, lng:13.22, estado:"próximo do usuário", velocidade:10},
-  {nome:"Tecul", lat:-8.82, lng:13.20, estado:"parado", velocidade:0}
-];
+let users=[{numero:"940045782", expira:Date.now()+360000, pago:true, bloqueado:false},{numero:"923000111", expira:Date.now()-60000, pago:false, bloqueado:false}];
+let payments=[{numero:"940045782", valor:10, hora:"14:20", metodo:"USSD"},{numero:"923000111", valor:15, hora:"15:00", metodo:"USSD"},{numero:"940012345", valor:20, hora:"16:10", metodo:"Multicaixa Express"},{numero:"923098765", valor:30, hora:"17:25", metodo:"Multicaixa Express"}];
+let vehicles=[{nome:"Cidrália", lat:-8.8383, lng:13.2344, estado:"em movimento", velocidade:30},{nome:"Rosalina", lat:-8.85, lng:13.22, estado:"próximo do usuário", velocidade:10},{nome:"Tecul", lat:-8.82, lng:13.20, estado:"parado", velocidade:0}];
 
 // Funções Usuários
 function renderUsers(){
   let html="";
-  users.forEach((u,index)=>{
-    let ativo = u.bloqueado ? "⛔ Bloqueado" : (u.expira > Date.now() ? "🟢 Ativo" : "🔴 Expirado");
-    let tempo = Math.max(0, Math.floor((u.expira - Date.now())/60000));
-    let pagamento = u.pago ? "✔️ Pago" : "❌ Não Pago";
-    html += `<li>${u.numero} - ${ativo} - Tempo: ${tempo} min - ${pagamento} 
-      <button class="removeButton" onclick="toggleBloqueio(${index})">Bloquear/Desbloquear</button></li>`;
+  users.forEach((u,i)=>{
+    let ativo=u.bloqueado?"⛔ Bloqueado":(u.expira>Date.now()?"🟢 Ativo":"🔴 Expirado");
+    let tempo=Math.max(0,Math.floor((u.expira-Date.now())/60000));
+    let pago=u.pago?"✔️ Pago":"❌ Não Pago";
+    html+=`<li>${u.numero} - ${ativo} - Tempo: ${tempo} min - ${pago} <button onclick="toggleBloqueio(${i})">Bloquear/Desbloquear</button></li>`;
   });
-  document.getElementById("users").innerHTML = html;
+  document.getElementById("users").innerHTML=html;
 }
 
-function addUser(){
-  let num = document.getElementById("newUser").value.trim();
-  if(num){ users.push({numero:num, expira:Date.now()+360000, pago:false, bloqueado:false}); document.getElementById("newUser").value=""; renderUsers(); renderStats(); updateCharts(); }
-}
-
-function toggleBloqueio(index){ users[index].bloqueado = !users[index].bloqueado; renderUsers(); }
+function addUser(){ let n=document.getElementById("newUser").value.trim(); if(n){ users.push({numero:n,expira:Date.now()+360000,pago:false,bloqueado:false}); document.getElementById("newUser").value=""; renderUsers(); renderStats(); renderCharts(); } }
+function toggleBloqueio(i){ users[i].bloqueado=!users[i].bloqueado; renderUsers(); }
+function filterUsers(){ let termo=document.getElementById("searchUser").value.trim(); let html=""; users.filter(u=>u.numero.includes(termo)).forEach((u,i)=>{ let ativo=u.bloqueado?"⛔ Bloqueado":(u.expira>Date.now()?"🟢 Ativo":"🔴 Expirado"); let tempo=Math.max(0,Math.floor((u.expira-Date.now())/60000)); let pago=u.pago?"✔️ Pago":"❌ Não Pago"; html+=`<li>${u.numero} - ${ativo} - Tempo: ${tempo} min - ${pago} <button onclick="toggleBloqueio(${i})">Bloquear/Desbloquear</button></li>`; }); document.getElementById("users").innerHTML=html; }
 
 // Funções Pagamentos
-function renderPayments(filteredMethod="Todos"){
-  let html="";
-  payments.forEach((p,index)=>{
-    if(filteredMethod==="Todos" || p.metodo===filteredMethod){
-      html += `<li>${p.numero} - ${p.valor} KZ - ${p.metodo} - Hora: ${p.hora} 
-        <button class="removeButton" onclick="removePayment(${index})">❌</button></li>`;
-    }
-  });
-  document.getElementById("payments").innerHTML = html;
-}
+function renderPayments(filter="Todos"){ let html=""; payments.forEach((p,i)=>{ if(filter==="Todos"||p.metodo===filter){ html+=`<li>${p.numero} - ${p.valor} KZ - ${p.metodo} - Hora: ${p.hora} <button onclick="removePayment(${i})">❌</button></li>`; } }); document.getElementById("payments").innerHTML=html; }
+function addPayment(){ let num=document.getElementById("paymentNumber").value.trim(); let val=Number(document.getElementById("paymentValue").value); let met=document.getElementById("paymentMethod").value; if(num&&val){ payments.push({numero:num,valor:val,hora:new Date().toLocaleTimeString(),metodo:met}); document.getElementById("paymentNumber").value=""; document.getElementById("paymentValue").value=""; renderPayments(); renderStats(); renderCharts(); } }
+function removePayment(i){ payments.splice(i,1); renderPayments(); renderStats(); renderCharts(); }
+function filterPayments(m){ renderPayments(m); }
 
-function addPayment(){
-  let num = document.getElementById("paymentNumber").value.trim();
-  let val = Number(document.getElementById("paymentValue").value);
-  let method = document.getElementById("paymentMethod").value;
-  if(num && val){ payments.push({numero:num, valor:val, hora:new Date().toLocaleTimeString(), metodo:method}); document.getElementById("paymentNumber").value=""; document.getElementById("paymentValue").value=""; renderPayments(); renderStats(); updateCharts();}
-}
-
-function removePayment(index){ payments.splice(index,1); renderPayments(); renderStats(); updateCharts(); }
-function filterPayments(method){ renderPayments(method); }
-
-// Mapa
+// Veículos
 let map;
-function initMap(){
-  map = L.map('map').setView([-8.8383, 13.2344], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  vehicles.forEach(v=>{
-    L.marker([v.lat,v.lng]).addTo(map).bindPopup(`${v.nome} - ${v.estado} - ${v.velocidade} km/h`);
-  });
-}
-
-function addVehicle(){
-  let nome=document.getElementById("vehicleName").value.trim();
-  let lat=parseFloat(document.getElementById("vehicleLat").value);
-  let lng=parseFloat(document.getElementById("vehicleLng").value);
-  if(nome && !isNaN(lat) && !isNaN(lng)){ vehicles.push({nome:nome, lat:lat, lng:lng, estado:"parado", velocidade:0}); document.getElementById("vehicleName").value=""; document.getElementById("vehicleLat").value=""; document.getElementById("vehicleLng").value=""; initMap(); }
-}
+function initMap(){ map=L.map('map').setView([-8.8383,13.2344],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); vehicles.forEach(v=>{ L.marker([v.lat,v.lng]).addTo(map).bindPopup(`${v.nome} - ${v.estado} - ${v.velocidade} km/h`); }); }
+function addVehicle(){ let n=document.getElementById("vehicleName").value.trim(); let lat=parseFloat(document.getElementById("vehicleLat").value); let lng=parseFloat(document.getElementById("vehicleLng").value); if(n&&!isNaN(lat)&&!isNaN(lng)){ vehicles.push({nome:n,lat:lat,lng:lng,estado:"parado",velocidade:0}); document.getElementById("vehicleName").value=""; document.getElementById("vehicleLat").value=""; document.getElementById("vehicleLng").value=""; initMap(); } }
 
 // Estatísticas
-function renderStats(){
-  let numUsuarios=users.length;
-  let totalGanhos=payments.reduce((sum,p)=>sum+p.valor,0);
-  document.getElementById("stats").innerHTML=`<li>Usuários: ${numUsuarios}</li><li>Ganhos: ${totalGanhos} KZ</li>`;
-}
+function renderStats(){ document.getElementById("stats").innerHTML=`<li>Usuários: ${users.length}</li><li>Ganhos: ${payments.reduce((s,p)=>s+p.valor,0)} KZ</li>`; }
 
-// Gráficos Chart.js
-let usersChart, paymentsUSSDChart, paymentsMultiChart;
+// Gráficos
+let usersChart,paymentsUSSDChart,paymentsMulticaixaChart;
 function renderCharts(){
-    const ctxUsers = document.getElementById('usersChart').getContext('2d');
-    usersChart = new Chart(ctxUsers, {
-        type: 'line',
-        data: {
-            labels: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],
-            datasets:[{label:'Usuários por dia', data:[users.length,5,3,4,6,5,7], borderColor:'rgba(34,197,94,1)', backgroundColor:'rgba(34,197,94,0.2)', fill:true, tension:0.3}]
-        }, options:{responsive:true, plugins:{legend:{display:true}}}
-    });
+  const ctxUsers=document.getElementById('usersChart').getContext('2d');
+  usersChart=new Chart(ctxUsers,{type:'line',data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],datasets:[{label:'Usuários por dia',data:[users.length,5,3,4,6,5,7],borderColor:'rgba(34,197,94,1)',backgroundColor:'rgba(34,197,94,0.2)',fill:true,tension:0.3}]}});
+  
+  const ctxUSSD=document.getElementById('paymentsUSSDChart').getContext('2d');
+  let ussdData=[0,0,0,0,0,0,0]; payments.filter(p=>p.metodo==='USSD').forEach((p,i)=>{ ussdData[i%7]++; });
+  paymentsUSSDChart=new Chart(ctxUSSD,{type:'bar',data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],datasets:[{label:'Pagamentos USSD',data:ussdData,backgroundColor:'rgba(59,130,246,0.7)'}]}});
 
-    // Gráfico USSD
-    const ctxUSSD = document.getElementById('paymentsUSSDChart').getContext('2d');
-    let ussdData = Array(7).fill(0);
-    payments.forEach(p=>{ if(p.metodo==="USSD") ussdData[ussdData.length-1]++; }); // Atualiza apenas o dia atual
-    paymentsUSSDChart = new Chart(ctxUSSD, {
-        type:'bar',
-        data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Hoje'], datasets:[{label:'Pagamentos USSD', data:ussdData, backgroundColor:'rgba(34,197,94,0.7)'}]},
-        options:{responsive:true, plugins:{legend:{display:true}}}
-    });
-
-    // Gráfico Multicaixa Express
-    const ctxMulti = document.getElementById('paymentsMultiChart').getContext('2d');
-    let multiData = Array(7).fill(0);
-    payments.forEach(p=>{ if(p.metodo==="Multicaixa Express") multiData[multiData.length-1]++; });
-    paymentsMultiChart = new Chart(ctxMulti, {
-        type:'bar',
-        data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Hoje'], datasets:[{label:'Pagamentos Multicaixa Express', data:multiData, backgroundColor:'rgba(59,130,246,0.7)'}]},
-        options:{responsive:true, plugins:{legend:{display:true}}}
-    });
-}
-
-function updateCharts(){
-    usersChart.data.datasets[0].data=[users.length,5,3,4,6,5,7]; usersChart.update();
-    let ussdData = Array(7).fill(0); payments.forEach(p=>{ if(p.metodo==="USSD") ussdData[ussdData.length-1]++; }); paymentsUSSDChart.data.datasets[0].data=ussdData; paymentsUSSDChart.update();
-    let multiData = Array(7).fill(0); payments.forEach(p=>{ if(p.metodo==="Multicaixa Express") multiData[multiData.length-1]++; }); paymentsMultiChart.data.datasets[0].data=multiData; paymentsMultiChart.update();
+  const ctxMulti=document.getElementById('paymentsMulticaixaChart').getContext('2d');
+  let multiData=[0,0,0,0,0,0,0]; payments.filter(p=>p.metodo==='Multicaixa Express').forEach((p,i)=>{ multiData[i%7]++; });
+  paymentsMulticaixaChart=new Chart(ctxMulti,{type:'bar',data:{labels:['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],datasets:[{label:'Pagamentos Multicaixa',data:multiData,backgroundColor:'rgba(34,197,94,0.7)'}]}});
 }
 
 // Inicialização
-function iniciarSistema(){
-    renderUsers(); renderPayments(); renderStats(); initMap(); renderCharts();
-    setInterval(renderUsers,1000);
-}
-
-window.onload = iniciarSistema;
+function iniciarSistema(){ renderUsers(); renderPayments(); renderStats(); initMap(); renderCharts(); }
+window.onload=iniciarSistema;
 </script>
 
 </body>
