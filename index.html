@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LocalWab Admin - Login</title>
-
 <style>
 body { margin:0; font-family:Arial; background:#0f172a; color:white;}
 .login { display:flex; justify-content:center; align-items:center; height:100vh;}
@@ -12,10 +11,8 @@ body { margin:0; font-family:Arial; background:#0f172a; color:white;}
 input { display:block; margin:10px auto; padding:10px; width:200px;}
 button { padding:10px; background:#22c55e; border:none; color:white; cursor:pointer;}
 </style>
-
 </head>
 <body>
-
 <div class="login">
     <div class="box">
         <h2>🔐 LocalWab Admin</h2>
@@ -24,20 +21,21 @@ button { padding:10px; background:#22c55e; border:none; color:white; cursor:poin
         <button type="button" onclick="login()">Entrar</button>
     </div>
 </div>
-
 <script>
+// Usuário e senha
+const USER = "valentim24";
+const PASS = "Valentim24@";
+
 function login() {
     let u = document.getElementById("user").value.trim();
     let p = document.getElementById("pass").value.trim();
-
-    if(u === "admin" && p === "1234"){
-        // Redireciona para o dashboard
+    if(u === USER && p === PASS){
+        sessionStorage.setItem("loggedIn", "true");
         window.location.href = "dashboard.html";
     } else {
         alert("Login inválido");
     }
 }
 </script>
-
 </body>
 </html>
